@@ -1,0 +1,8 @@
+name: Districts
+version: 1.0.0
+main: me.RegalMachine.Districts.Main
+description: Chunk protection plugin for BlockWizards.
+depend: [WorldEdit, WorldGuard, WGRegionEvents]
+commands:
+  district:
+    description: Used to interact with districts.
