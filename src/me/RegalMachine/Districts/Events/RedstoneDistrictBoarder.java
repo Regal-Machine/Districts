@@ -10,6 +10,7 @@ import me.RegalMachine.Districts.Protection.DistrictBag;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,7 +21,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class RedstoneDistrictBoarder implements Listener{
 	
-	private Map<Player, ArrayList<Location>> borderBlocks = new HashMap<Player, ArrayList<Location>>();
+	private Map<Player, ArrayList<Block>> borderBlocks = new HashMap<Player, ArrayList<Block>>();
 	
 	@SuppressWarnings("deprecation")
 	@EventHandler
@@ -34,18 +35,18 @@ public class RedstoneDistrictBoarder implements Listener{
 				return;
 			}
 			if(!borderBlocks.containsKey(p)){
-				borderBlocks.put(p, new ArrayList<Location>());
+				borderBlocks.put(p, new ArrayList<Block>());
 			}
 			for(int x = region.getMinimumPoint().getBlockX(); x<= region.getMaximumPoint().getBlockX(); x++){
-				borderBlocks.get(p).add(world.getHighestBlockAt(new Location(world, x, 0, region.getMinimumPoint().getBlockZ())).getLocation());
-				borderBlocks.get(p).add(world.getHighestBlockAt(new Location(world, x, 0, region.getMaximumPoint().getBlockZ())).getLocation());
+				borderBlocks.get(p).add(world.getBlockAt(x, world.getHighestBlockYAt(new Location(world, x, 0, region.getMinimumPoint().getBlockZ())) - 1, region.getMinimumPoint().getBlockZ()));
+				borderBlocks.get(p).add(world.getBlockAt(x, world.getHighestBlockYAt(new Location(world, x, 0, region.getMaximumPoint().getBlockZ())) - 1, region.getMaximumPoint().getBlockZ()));
 			}
 			for(int z = region.getMinimumPoint().getBlockZ(); z<= region.getMaximumPoint().getBlockZ(); z++){
-				borderBlocks.get(p).add(world.getHighestBlockAt(new Location(world, region.getMinimumPoint().getBlockX(), 0, z)).getLocation());
-				borderBlocks.get(p).add(world.getHighestBlockAt(new Location(world, region.getMaximumPoint().getBlockX(), 0, z)).getLocation());
+				borderBlocks.get(p).add(world.getBlockAt(region.getMinimumPoint().getBlockX(), world.getHighestBlockYAt(new Location(world, region.getMinimumPoint().getBlockX(), 0, z)) - 1, z));
+				borderBlocks.get(p).add(world.getBlockAt(region.getMaximumPoint().getBlockX(), world.getHighestBlockYAt(new Location(world, region.getMaximumPoint().getBlockX(), 0, z)) - 1, z));
 			}
-			for(Location loc: borderBlocks.get(p)){
-				p.sendBlockChange(new Location(loc.getWorld(), loc.getX(), loc.getY()-1, loc.getZ()), Material.REDSTONE_BLOCK, (byte) 0);
+			for(Block block: borderBlocks.get(p)){
+				p.sendBlockChange(block.getLocation(), Material.REDSTONE_BLOCK, block.getData());
 			}
 		}
 	}
@@ -55,9 +56,8 @@ public class RedstoneDistrictBoarder implements Listener{
 		ProtectedRegion region = e.getRegion();
 		if(DistrictBag.districts.containsKey(UUID.fromString(region.getId()))){
 			if(borderBlocks.containsKey(p)){
-				for(Location loc: borderBlocks.get(p)){
-					Location locc = new Location(loc.getWorld(),loc.getX(),loc.getY(),loc.getZ());
-					p.sendBlockChange(locc, Material.GRASS, (byte) 0);
+				for(Block block: borderBlocks.get(p)){
+					p.sendBlockChange(block.getLocation(), block.getType(), block.getData());
 				}
 				borderBlocks.remove(p);
 			}
