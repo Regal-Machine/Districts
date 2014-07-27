@@ -5,6 +5,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.bukkit.World;
+
+import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+
 import me.RegalMachine.Districts.Main;
 
 public class DistrictBag {
@@ -17,6 +23,20 @@ public class DistrictBag {
 		}else{
 			districts.remove(district.getUUID());
 			districts.put(district.getUUID(), district);
+		}
+	}
+	
+	public static void remove(District d){
+		ProtectedRegion pr = d.getRegion();
+		World world = d.getCenter().getWorld();
+		RegionManager rm = Main.guard.worldGuard().getRegionManager(world);
+		districts.remove(d);
+		rm.removeRegion(pr.getId());
+		try {
+			rm.save();
+		} catch (ProtectionDatabaseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	

@@ -3,7 +3,7 @@ package me.RegalMachine.Districts;
 import me.RegalMachine.Districts.Commands.DistrictCommand;
 import me.RegalMachine.Districts.Events.AnnounceOwnersDistrict;
 import me.RegalMachine.Districts.Events.JoinEvent;
-import me.RegalMachine.Districts.Events.RedstoneDistrictBoarder;
+import me.RegalMachine.Districts.Events.LeaveEvent;
 import me.RegalMachine.Districts.Players.WizardBag;
 import me.RegalMachine.Districts.Protection.DistrictBag;
 import me.RegalMachine.Districts.Protection.WorldGuard.WorldGuardSetup;
@@ -41,9 +41,12 @@ public class Main extends JavaPlugin{
 		DistrictBag.loadDistricts();
 		
 		Bukkit.getPluginManager().registerEvents(new JoinEvent(), this);
+		Bukkit.getPluginManager().registerEvents(new LeaveEvent(), this);
+		//For Removal of Dependencies
 		//Bukkit.getPluginManager().registerEvents(new WGRegionEventUtil(), this);
+		// TODO Fix the Redstone Block Border
 		Bukkit.getPluginManager().registerEvents(new AnnounceOwnersDistrict(), this);
-		Bukkit.getPluginManager().registerEvents(new RedstoneDistrictBoarder(), this);
+		//Bukkit.getPluginManager().registerEvents(new RedstoneDistrictBoarder(), this);
 		
 		getCommand("district").setExecutor(new DistrictCommand());
 		

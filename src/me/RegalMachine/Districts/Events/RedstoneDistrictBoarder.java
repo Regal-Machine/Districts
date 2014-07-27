@@ -51,6 +51,7 @@ public class RedstoneDistrictBoarder implements Listener{
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	public void onDistrictExit(RegionLeftEvent e){
 		Player p = e.getPlayer();
 		ProtectedRegion region = e.getRegion();

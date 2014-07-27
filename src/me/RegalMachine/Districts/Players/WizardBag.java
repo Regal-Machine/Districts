@@ -22,6 +22,10 @@ public class WizardBag {
 		wizards.put(p, new Wizard(p));
 	}
 	
+	public static void addWizard(String uuid){
+		wizards.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)).getPlayer(), new Wizard(uuid));
+	}
+	
 	public static Wizard getWizard(Player p){
 		if(wizards.containsKey(p))
 			return wizards.get(p);
@@ -35,6 +39,10 @@ public class WizardBag {
 			return wizards.get(p);
 		addWizard(p);
 		return wizards.get(p);
+	}
+	
+	public static void clearWizard(Player player){
+		wizards.remove(player);
 	}
 	
 	public static void loadWizards(){

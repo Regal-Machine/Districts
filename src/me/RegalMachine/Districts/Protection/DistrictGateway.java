@@ -1,5 +1,7 @@
 package me.RegalMachine.Districts.Protection;
 
+import java.util.List;
+
 import org.bukkit.Location;
 
 import com.sk89q.worldedit.BlockVector;
@@ -8,6 +10,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 
 import me.RegalMachine.Districts.Main;
 import me.RegalMachine.Districts.Players.Wizard;
+import me.RegalMachine.Districts.util.Permissions;
 
 public class DistrictGateway {
 	
@@ -20,6 +23,44 @@ public class DistrictGateway {
 			return false;
 		}
 		return true;
+	}
+	
+	public static boolean hasEnoughClaimBlocks(Wizard wizard, int radius){
+		int maxClaims = Permissions.getClaimableBlocks(wizard) + wizard.getBlockBoost();
+		int hasClaimed = 0;
+		List<District> claims = wizard.districtObjectsOwned();
+		
+		for(District d: claims){
+			hasClaimed = hasClaimed + ((d.getRadius()*2) * (d.getRadius()*2));
+		}
+		
+		if(hasClaimed + ((radius*2)*(radius*2)) > maxClaims){
+			return false;
+		}
+		return true;
+	}
+	
+	public static int claimsLeft(Wizard wizard){
+		int maxClaims = Permissions.getClaimableBlocks(wizard) + wizard.getBlockBoost();
+		int hasClaimed = 0;
+		List<District> claims = wizard.districtObjectsOwned();
+		
+		for(District d: claims){
+			hasClaimed = hasClaimed + ((d.getRadius()*2) * (d.getRadius()*2));
+		}
+		
+		return maxClaims - hasClaimed;
+		
+	}
+	
+	public static int getBlocksClaimed(Wizard wizard){
+		int hasClaimed = 0;
+		List<District> claims = wizard.districtObjectsOwned();
+		
+		for(District d: claims){
+			hasClaimed = hasClaimed + ((d.getRadius()*2) * (d.getRadius()*2));
+		}
+		return hasClaimed;
 	}
 	
 	

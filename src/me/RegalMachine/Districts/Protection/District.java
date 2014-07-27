@@ -1,5 +1,7 @@
 package me.RegalMachine.Districts.Protection;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import me.RegalMachine.Districts.Main;
@@ -23,13 +25,18 @@ public class District {
 	private Location center;
 	private int radius;
 	
+	private ProtectedRegion regionn;
+	
 	private Wizard owner;
+	private List<String> trusted; //Strings are UUID of Trusted Players
 	
 	public District(Location center, int radius, Wizard wizard){
 		id = UUID.randomUUID();
 		owner = wizard;
+		trusted = new ArrayList<String>();
+		this.center = center;
 		//Here we make the region.
-		ProtectedCuboidRegion region = new ProtectedCuboidRegion(id.toString(),
+		ProtectedRegion region = new ProtectedCuboidRegion(id.toString(),
 				new BlockVector(new Vector(center.getBlockX() - radius, 0, center.getBlockZ() - radius)),
 				new BlockVector(new Vector(center.getBlockX() + radius, 127, center.getBlockZ() + radius)));
 		
@@ -44,17 +51,20 @@ public class District {
 		try {
 			manager.save();
 		} catch (ProtectionDatabaseException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		regionn = manager.getRegion(id.toString());
+		
 		//Here we finish making the region
 		
 		//Do things to the Config
-		Main.districts.getConfig().createSection(id.toString());
-		Main.districts.getConfig().addDefault(id.toString() + ".ownerUUID", owner.getPlayer().getUniqueId().toString());
-		Main.districts.getConfig().addDefault(id.toString() + ".worldUUID", center.getWorld().getUID().toString());
-		Main.districts.getConfig().addDefault(id.toString() + ".xyz", center.toVector());
-		Main.districts.getConfig().addDefault(id.toString() + ".radius", radius);
+		Main.districts.getConfig().createSection("Districts." + id.toString());
+		Main.districts.getConfig().addDefault("Districts." + id.toString() + ".ownerUUID", owner.getPlayer().getUniqueId().toString());
+		Main.districts.getConfig().addDefault("Districts." + id.toString() + ".worldUUID", center.getWorld().getUID().toString());
+		Main.districts.getConfig().addDefault("Districts." + id.toString() + ".xyz", center.toVector());
+		Main.districts.getConfig().addDefault("Districts." + id.toString() + ".radius", radius);
+		Main.districts.getConfig().addDefault("Districts." + id.toString() + ".trustedUUID", trusted);
 		
 		Main.districts.getConfig().options().copyDefaults(true);
 		Main.districts.saveConfig();
@@ -63,10 +73,11 @@ public class District {
 	
 	public District(String uuid){
 		id = UUID.fromString(uuid);
-		org.bukkit.util.Vector vector = Main.districts.getConfig().getVector(id.toString() + ".xyz");
-		center = new Location(Bukkit.getWorld(UUID.fromString(Main.districts.getConfig().getString(id.toString() + ".worldUUID"))), vector.getX(), vector.getY(), vector.getZ());
+		org.bukkit.util.Vector vector = Main.districts.getConfig().getVector("Districts." + id.toString() + ".xyz");
+		center = new Location(Bukkit.getWorld(UUID.fromString(Main.districts.getConfig().getString("Districts." + id.toString() + ".worldUUID"))), vector.getX(), vector.getY(), vector.getZ());
 		radius = Main.districts.getConfig().getInt(id.toString() + ".radius");
-		owner = WizardBag.getWizard(Bukkit.getOfflinePlayer(UUID.fromString(Main.districts.getConfig().getString(id.toString() + ".ownerUUID"))).getPlayer());
+		owner = WizardBag.getWizard(Bukkit.getOfflinePlayer(UUID.fromString(Main.districts.getConfig().getString("Districts." + id.toString() + ".ownerUUID"))).getPlayer());
+		trusted = Main.districts.getConfig().getStringList("Districts." + id.toString() + ".trustedUUID");
 		
 		/*ProtectedCuboidRegion region = new ProtectedCuboidRegion(id.toString(),
 				new BlockVector(new Vector(center.getBlockX() - radius, 0, center.getBlockZ() - radius)),
@@ -86,10 +97,40 @@ public class District {
 	
 	public District(UUID uid){
 		id = uid;
-		org.bukkit.util.Vector vector = Main.districts.getConfig().getVector(id.toString() + ".xyz");
-		center = new Location(Bukkit.getWorld(UUID.fromString(Main.districts.getConfig().getString(id.toString() + ".worldUUID"))), vector.getX(), vector.getY(), vector.getZ());
-		radius = Main.districts.getConfig().getInt(id.toString() + ".radius");
-		owner = WizardBag.getWizard(Bukkit.getPlayer(UUID.fromString(Main.districts.getConfig().getString(id.toString() + ".ownerUUID"))));
+		org.bukkit.util.Vector vector = Main.districts.getConfig().getVector("Districts." + id.toString() + ".xyz");
+		center = new Location(Bukkit.getWorld(UUID.fromString(Main.districts.getConfig().getString("Districts." + id.toString() + ".worldUUID"))), vector.getX(), vector.getY(), vector.getZ());
+		radius = Main.districts.getConfig().getInt("Districts." + id.toString() + ".radius");
+		owner = WizardBag.getWizard(Bukkit.getPlayer(UUID.fromString(Main.districts.getConfig().getString("Districts." + id.toString() + ".ownerUUID"))));
+		trusted = Main.districts.getConfig().getStringList("Districts." + id.toString() + ".trustedUUID");
+	}
+	
+	public void remove(){
+		
+		Main.districts.getConfig().set("Districts." + id.toString() + ".ownerUUID", null);
+		Main.districts.getConfig().set("Districts." + id.toString() + ".worldUUID", null);
+		Main.districts.getConfig().set("Districts." + id.toString() + ".xyz", null);
+		Main.districts.getConfig().set("Districts." + id.toString() + ".radius", null);
+		Main.districts.getConfig().set("Districts." + id.toString() + ".trustedUUID", null);
+		
+		Main.districts.getConfig().set("Districts." + id.toString(), null);
+		
+		Main.districts.saveConfig();
+	}
+	
+	public void trust(Wizard wizard){
+		trusted.add(wizard.getPlayer().getUniqueId().toString());
+		Main.districts.getConfig().set("Districts." + id.toString() + ".trustedUUID", trusted);
+		
+		Main.districts.saveConfig();
+		Main.districts.reloadConfig();
+	}
+	
+	public void distrust(Wizard wizard){
+		trusted.remove(wizard.getPlayer().getUniqueId().toString());
+		Main.districts.getConfig().set("Districts." + id.toString() + ".trustedUUID", trusted);
+		
+		Main.districts.saveConfig();
+		Main.districts.reloadConfig();
 	}
 	
 	public UUID getUUID(){
@@ -105,11 +146,15 @@ public class District {
 	}
 	
 	public ProtectedRegion getRegion(){
-		return Main.guard.worldGuard().getRegionManager(center.getWorld()).getRegion(id.toString());
+		return regionn;
 	}
 	
 	public Wizard getOwner(){
 		return owner;
+	}
+	
+	public List<String> getTrusted(){
+		return trusted;
 	}
 	
 	@SuppressWarnings("unused")
